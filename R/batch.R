@@ -15,6 +15,7 @@
 #' @param benchmark Optional Census Benchmark to geocode against. See Details.
 #' @param vintage Optional Census Vintage to geocode against. See Details.
 #' @param timeout Numeric, in minutes, how long until request times out
+#' @param retries Optional integer indicating the number of times the api call should be tried.
 #' @param parallel Integer, number of cores greater than one if parallel requests are desired. See Details.
 #' @param class One of 'dataframe' or 'sf' denoting the output class. 'sf' will only return matched addresses.
 #' @param output One of 'simple' or 'full' denoting the returned columns. Simple returns just coordinates.
@@ -43,7 +44,7 @@
 #'    return = 'locations', class = 'dataframe', output = 'simple')
 #'
 #' @export
-cxy_geocode <- function(.data, id = NULL, street, city = NULL, state = NULL, zip = NULL, return = 'locations', benchmark = 'Public_AR_Current', vintage = NULL, timeout = 30, parallel = 1, class = 'dataframe', output = 'simple'){
+cxy_geocode <- function(.data, id = NULL, street, city = NULL, state = NULL, zip = NULL, return = 'locations', benchmark = 'Public_AR_Current', vintage = NULL, timeout = 30, retries = 5, parallel = 1, class = 'dataframe', output = 'simple'){
 
   # Check Specification of Arguments
   if(missing(.data) | missing(street)){
@@ -179,7 +180,7 @@ cxy_geocode <- function(.data, id = NULL, street, city = NULL, state = NULL, zip
 
     if(.Platform$OS.type == 'unix'){
       results <- parallel::mclapply(batches, batch_geocoder,
-                                  return, timeout, benchmark, vintage,
+                                  return, timeout, benchmark, vintage, retries,
                                   mc.cores = core_count)
     }else{
       i = NULL # Prevent Warning for Undeclared Global Variable
@@ -189,7 +190,7 @@ cxy_geocode <- function(.data, id = NULL, street, city = NULL, state = NULL, zip
 
       # replace foreach + dopar gives you a parallel workflow, like mclapply
       results <- foreach::foreach(i = 1:length(batches), .export = 'batch_geocoder') %dopar% {
-        batch_geocoder(batches[[i]], return, timeout, benchmark, vintage)
+        batch_geocoder(batches[[i]], return, timeout, benchmark, vintage, retries)
       }
 
       # however, you do need to stop the cluster.
@@ -200,7 +201,7 @@ cxy_geocode <- function(.data, id = NULL, street, city = NULL, state = NULL, zip
     # Split and Iterate
     batches <- split(uniq, (seq(nrow(uniq))-1) %/% 1000 )
     results <- lapply(batches, batch_geocoder,
-                      return, timeout, benchmark, vintage)
+                      return, timeout, benchmark, vintage, retries)
 
   }
 

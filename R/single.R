@@ -9,6 +9,7 @@
 #' @param return One of 'locations' or 'geographies' See Details.
 #' @param benchmark Optional ID or Name of Census Benchmark. See Details.
 #' @param vintage Optional ID or Name of Census Vintage. See Details.
+#' @param retries Optional integer indicating the number of times the api call should be tried.
 #'
 #' @return A data.frame containing matched address or NULL if not matches
 #'
@@ -28,7 +29,7 @@
 #' }
 #'
 #' @export
-cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = 'locations', benchmark = 'Public_AR_Current', vintage = NULL){
+cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = 'locations', benchmark = 'Public_AR_Current', vintage = NULL, retries = 5){
 
   # Check Specification of Arguments
   if(missing(street)){
@@ -54,17 +55,23 @@ cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = '
 
   url <- paste0('https://geocoding.geo.census.gov/geocoder/',return,'/address')
   req <-
-    httr::GET(url,
-              query = list(
-                benchmark = benchmark,
-                vintage = vintage,
-                street = street,
-                city = city,
-                state = state,
-                zip = zip,
-                format = 'json'
-              )
+    httr::RETRY("GET",
+                url,
+                query = list(
+                  benchmark = benchmark,
+                  vintage = vintage,
+                  street = street,
+                  city = city,
+                  state = state,
+                  zip = zip,
+                  format = 'json'
+                ),
+                times = retries
     )
+
+  #Convert HTTP errors into R error messages
+  httr::stop_for_status(req)
+
   cnt <- httr::content(req)
 
   # Check for API Errors
@@ -89,6 +96,7 @@ cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = '
 #' @param return One of 'locations' or 'geographies' See Details.
 #' @param benchmark Optional ID or Name of Census Benchmark. See Details.
 #' @param vintage Optional ID or Name of Census Vintage. See Details.
+#' @param retries Optional integer indicating the number of times the api call should be tried.
 #'
 #' @return A data.frame containing matched address or NULL if not matches
 #'
@@ -107,7 +115,7 @@ cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = '
 #' }
 #'
 #' @export
-cxy_oneline <- function(address, return = 'locations', benchmark = 'Public_AR_Current', vintage = NULL){
+cxy_oneline <- function(address, return = 'locations', benchmark = 'Public_AR_Current', vintage = NULL, retries = 5){
 
   # Check Specification of Arguments
   if(missing(address)){
@@ -128,13 +136,15 @@ cxy_oneline <- function(address, return = 'locations', benchmark = 'Public_AR_Cu
 
   url <- paste0('https://geocoding.geo.census.gov/geocoder/',return,'/onelineaddress')
   req <-
-    httr::GET(url,
-              query = list(
-                benchmark = benchmark,
-                vintage = vintage,
-                address = address,
-                format = 'json'
-              )
+    httr::RETRY("GET",
+                url,
+                query = list(
+                  benchmark = benchmark,
+                  vintage = vintage,
+                  address = address,
+                  format = 'json'
+                ),
+                times = retries
     )
   cnt <- httr::content(req)
 
@@ -161,6 +171,7 @@ cxy_oneline <- function(address, return = 'locations', benchmark = 'Public_AR_Cu
 #' @param lat Numeric or String Containing Latitude (y) of Point
 #' @param benchmark Optional ID or Name of Census Benchmark. See Details.
 #' @param vintage Optional ID or Name of Census Vintage. See Details.
+#' @param retries Optional integer indicating the number of times the api call should be tried.
 #'
 #' @return A data.frame containing matched address or NULL if not matches
 #'
@@ -180,18 +191,24 @@ cxy_oneline <- function(address, return = 'locations', benchmark = 'Public_AR_Cu
 #' cxy_geography(lon = -90.23324, lat = 38.63593)
 #'
 #' @export
-cxy_geography <- function(lon, lat, benchmark = 'Public_AR_Current', vintage = 'Current_Current'){
+cxy_geography <- function(lon, lat, benchmark = 'Public_AR_Current', vintage = 'Current_Current', retries = 5){
   url <- 'https://geocoding.geo.census.gov/geocoder/geographies/coordinates'
   req <-
-    httr::GET(url,
-              query = list(
-                benchmark = benchmark,
-                vintage = vintage,
-                x = lon,
-                y = lat,
-                format = 'json'
-              )
+    httr::RETRY("GET",
+                url,
+                query = list(
+                  benchmark = benchmark,
+                  vintage = vintage,
+                  x = lon,
+                  y = lat,
+                  format = 'json'
+                ),
+                times = retries
     )
+
+  # Convert HTTP error to R error message
+  httr::stop_for_status(req)
+
   cnt <- httr::content(req)
 
   # Check for API Errors

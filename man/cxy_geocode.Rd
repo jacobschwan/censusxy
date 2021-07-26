@@ -15,6 +15,7 @@ cxy_geocode(
   benchmark = "Public_AR_Current",
   vintage = NULL,
   timeout = 30,
+  retries = 5,
   parallel = 1,
   class = "dataframe",
   output = "simple"
@@ -40,6 +41,8 @@ cxy_geocode(
 \item{vintage}{Optional Census Vintage to geocode against. See Details.}
 
 \item{timeout}{Numeric, in minutes, how long until request times out}
+
+\item{retries}{Optional integer indicating the number of times the api call should be tried.}
 
 \item{parallel}{Integer, number of cores greater than one if parallel requests are desired. See Details.}
 

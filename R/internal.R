@@ -1,6 +1,6 @@
 # Interal Function for Geocoding with the Batch Endpoint
 
-batch_geocoder <- function(df, return, timeout, benchmark, vintage){
+batch_geocoder <- function(df, return, timeout, benchmark, vintage, retries){
   # Write a Temporary CSV
   tmp <- tempfile(fileext = '.csv')
   utils::write.table(df, tmp, col.names = FALSE, row.names = FALSE,
@@ -8,7 +8,8 @@ batch_geocoder <- function(df, return, timeout, benchmark, vintage){
 
   url <- paste0('https://geocoding.geo.census.gov/geocoder/',return,'/addressbatch')
   req <-
-    httr::POST(url,
+    httr::RETRY("POST",
+               url,
                body = list(
                  addressFile = httr::upload_file(tmp),
                  benchmark = benchmark,
@@ -16,8 +17,13 @@ batch_geocoder <- function(df, return, timeout, benchmark, vintage){
                  format = 'json'
                ),
                encode = 'multipart',
+               times = retries,
                httr::timeout(timeout * 60)
     )
+
+  # Convert HTTP error to R error message
+  httr::stop_for_status(req)
+
   cnt <- httr::content(req, as = 'text', encoding = 'UTF-8')
 
   # Error if Benchmark/Vintage Invalid
@@ -42,6 +48,6 @@ batch_geocoder <- function(df, return, timeout, benchmark, vintage){
 
   df$lon <- vapply(lonlat,function(x){x[1]}, 'numeric')
   df$lat <- vapply(lonlat,function(x){x[2]}, 'numeric')
-  
+
   return(df)
 }

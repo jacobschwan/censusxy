@@ -11,7 +11,8 @@ cxy_single(
   zip = NULL,
   return = "locations",
   benchmark = "Public_AR_Current",
-  vintage = NULL
+  vintage = NULL,
+  retries = 5
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ cxy_single(
 \item{benchmark}{Optional ID or Name of Census Benchmark. See Details.}
 
 \item{vintage}{Optional ID or Name of Census Vintage. See Details.}
+
+\item{retries}{Optional integer indicating the number of times the api call should be tried.}
 }
 \value{
 A data.frame containing matched address or NULL if not matches
