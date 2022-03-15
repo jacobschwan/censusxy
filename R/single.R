@@ -70,14 +70,9 @@ cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = '
     )
 
   #Convert HTTP errors into R error messages
-  httr::stop_for_status(req)
+  httr::warn_for_status(req)
 
   cnt <- httr::content(req)
-
-  # Check for API Errors
-  if(!is.null(cnt$errors)){
-    stop(cnt$errors[[1]])
-  }
 
   matches <- cnt$result$addressMatches
   if(length(matches) < 1){
@@ -207,13 +202,13 @@ cxy_geography <- function(lon, lat, benchmark = 'Public_AR_Current', vintage = '
     )
 
   # Convert HTTP error to R error message
-  httr::stop_for_status(req)
+  httr::warn_for_status(req)
 
   cnt <- httr::content(req)
 
   # Check for API Errors
   if(!is.null(cnt$errors)){
-    stop(cnt$errors[[1]])
+    return(NULL)
   }
 
   # Check for Matches

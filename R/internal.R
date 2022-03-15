@@ -22,7 +22,7 @@ batch_geocoder <- function(df, return, timeout, benchmark, vintage, retries){
     )
 
   # Convert HTTP error to R error message
-  httr::stop_for_status(req)
+  httr::warn_for_status(req)
 
   cnt <- httr::content(req, as = 'text', encoding = 'UTF-8')
 
@@ -30,7 +30,8 @@ batch_geocoder <- function(df, return, timeout, benchmark, vintage, retries){
   # Not Perfect, Error is Returned as HTML, could be other errors... (BAD API DESIGN!)
   # Could Cause Large Batches to FAIL if API Fails Unexpectedly
   if(grepl('<p>', cnt)){
-    stop('API Failed Unexpectedly, Did you supply an Invalid Benchmark or Vintage?')
+    #stop('API Failed Unexpectedly, Did you supply an Invalid Benchmark or Vintage?')
+    return(NULL)
   }
 
   cols <- switch (return,
