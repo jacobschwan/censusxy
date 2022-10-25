@@ -76,7 +76,7 @@ cxy_single <- function(street, city = NULL, state = NULL, zip = NULL, return = '
 
   matches <- cnt$result$addressMatches
   if(length(matches) < 1){
-    return(NULL)
+    return(data.frame())
   }
   df <- data.frame(matches)
   return(df)

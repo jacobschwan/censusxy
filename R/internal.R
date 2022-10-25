@@ -31,7 +31,7 @@ batch_geocoder <- function(df, return, timeout, benchmark, vintage, retries){
   # Could Cause Large Batches to FAIL if API Fails Unexpectedly
   if(grepl('<p>', cnt)){
     #stop('API Failed Unexpectedly, Did you supply an Invalid Benchmark or Vintage?')
-    return(NULL)
+    return(data.frame())
   }
 
   cols <- switch (return,
